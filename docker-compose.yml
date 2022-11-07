@@ -1,0 +1,78 @@
+version: '3.8'
+services:
+  blaze:
+    # image: "samply/blaze:0.17"
+    build:
+      context: ./blaze
+      dockerfile: Dockerfile
+    environment:
+      BASE_URL: "http://localhost:8080"
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+    ports:
+      - "${BLAZE_PORT}:8080"
+    container_name: blaze
+    volumes:
+      - "blaze-data:/app/data"
+    healthcheck:
+      test: curl --fail http://blaze:8080/fhir || exit 1
+      interval: 5s
+      retries: 10
+      start_period: 20s
+      timeout: 5s
+  termite:
+    build:
+      context: ./termite
+      dockerfile: Dockerfile
+    ports:
+      - "${TERMINOLOGY_SERVICE_PORT}:8083"
+    container_name: terminology-service
+    healthcheck:
+      test: curl --fail http://terminology-service:8083/fhir/metadata || exit 1
+      interval: 5s
+      retries: 10
+      start_period: 5s
+      timeout: 5s
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      #args:
+      #  - PYTHON_DEPS=MarkupSafe==2.0.1 aws-sam-cli==1.37.0
+      #  - SERVICE_PORT=$SERVICE_PORT
+      #  - PACKAGES=$PACKAGES
+    environment:
+       PYTHON_DEPS: "MarkupSafe==2.0.1 aws-sam-cli==1.37.0"
+       SERVICE_PORT: "${SERVICE_PORT}"
+       BLAZE_PORT: "${BLAZE_PORT}"
+       VALIDATOR_PORT: "${VALIDATOR_PORT}"
+       PACKAGES: "${PACKAGES}"
+    ports:
+      - "${SERVICE_PORT}:8082"
+    container_name: validation-api
+    healthcheck:
+      test: curl --fail http://validation-api:8082/validate || exit 1
+      interval: 10s
+      retries: 20
+      start_period: 30s
+      timeout: 10s
+    depends_on:
+      blaze:
+        condition: service_healthy
+      termite:
+        condition: service_healthy
+  fhir-marshal:
+    build:
+      context: ./fhir_marshal
+      dockerfile: Dockerfile
+    environment:
+      BLAZE_PORT: "${BLAZE_PORT}"
+      TERMINOLOGY_SERVICE_PORT: "${TERMINOLOGY_SERVICE_PORT}"
+      VALIDATOR_PORT: "${VALIDATOR_PORT}"
+    ports:
+      - "${VALIDATOR_PORT}:8081"
+    container_name: fhir-marshal
+    depends_on:
+      web:
+          condition: service_healthy
+volumes:
+  blaze-data:

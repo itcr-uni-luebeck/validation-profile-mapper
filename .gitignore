@@ -1,0 +1,5 @@
+test.py
+.idea
+/terminology_data/*.json
+
+!.gitkeep
