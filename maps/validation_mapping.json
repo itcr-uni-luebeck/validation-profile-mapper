@@ -745,8 +745,9 @@
 		"8245-3": "https://www.medizininformatik-initiative.de/fhir/core/modul-diagnose/StructureDefinition/Zinc[Mass-volume]inBlood",
 		"5763-8": "https://www.medizininformatik-initiative.de/fhir/core/modul-diagnose/StructureDefinition/Zink"
 	},
-    "Medication": "https://example.org/fhir/StructureDefinition/ABIDE_Medication_ATCen",
-    "MedicationAdministration": "https://example.org/fhir/StructureDefinition/ABIDE_MedicationAdministration_ATCen",
-    "MedicationStatement": "https://example.org/fhir/StructureDefinition/ABIDE_MedicationStatement_ATCen",
-    "Procedure": "https://example.org/fhir/StructureDefinition/ABIDE_Procedure"
+    "Medication": "https://example.org/fhir/StructureDefinition/ABIDE_Medication_ATCde",
+    "MedicationAdministration": "https://example.org/fhir/StructureDefinition/ABIDE_MedicationAdministration_ATCde",
+    "MedicationStatement": "https://example.org/fhir/StructureDefinition/ABIDE_MedicationStatement_ATCde",
+    "Procedure": "https://example.org/fhir/StructureDefinition/ABIDE_Procedure",
+	"Specimen": "https://example.org/fhir/StructureDefinition/FDPG_SpecimenBiobank"
 }
