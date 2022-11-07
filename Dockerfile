@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
 FROM python:3.10-alpine
-ENV SERVICE_PORT=8082
-ENV VALIDATOR_PORT=8081
+ENV SERVICE_PORT 8092
+ENV VALIDATOR_PORT 8091
 
 # Install curl for healthcheck
 USER root

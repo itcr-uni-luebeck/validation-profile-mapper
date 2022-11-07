@@ -8,7 +8,6 @@ import requests
 import glob
 import variables
 import builtins
-import dotenv
 
 from json import JSONDecodeError
 from rec_get import rec_get, ParsingKeyError
