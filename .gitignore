@@ -1,5 +1,6 @@
 test.py
 .idea
 /terminology_data/*.json
+/profiles/*.json
 
 !.gitkeep
