@@ -8,6 +8,7 @@ import requests
 import glob
 import variables
 import builtins
+import os
 
 from json import JSONDecodeError
 from rec_get import rec_get, ParsingKeyError
@@ -16,6 +17,7 @@ app = flask.Flask(__name__, static_folder='')
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 validation_mapping = json.load(open(os.path.join('maps', 'validation_mapping.json')))
 resource_types = validation_mapping.keys()
+v_url = os.getenv('VALIDATOR_URL')
 
 # ======================================================================================================================
 # Supposed to be accessible via list indices corresponding to log levels in variable file
@@ -181,7 +183,7 @@ def generate_connection_warning(conn_error):
 
 
 def validate_with_marshal(data, content_type):
-    response = requests.post(url=variables.v_url + 'validate', headers={'Content-Type': content_type}, data=data)
+    response = requests.post(url=v_url + '/validate', headers={'Content-Type': content_type}, data=data)
     return response
 
 

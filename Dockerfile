@@ -1,14 +1,12 @@
 # syntax=docker/dockerfile:1
-
 FROM python:3.10-alpine
-ENV SERVICE_PORT 8092
-ENV VALIDATOR_PORT 8091
 
-# Install curl for healthcheck
-USER root
-RUN apk add curl
-# Install GCC for regex python module
+ENV SERVICE_PORT 8092
+ENV VALIDATOR_URL "http://localhost:8091"
+
 RUN apk add build-base
+
+VOLUME ["/app/maps"]
 
 WORKDIR /app
 # Config
@@ -18,4 +16,5 @@ COPY requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 EXPOSE ${SERIVCE_PORT}
 COPY . .
+
 ENTRYPOINT flask run --host 0.0.0.0 --port ${SERVICE_PORT}
