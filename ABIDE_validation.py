@@ -1,11 +1,12 @@
 import xml
 
 import flask
-import os
 import json
 import xmltodict
 import requests
-import glob
+
+from flask import Response
+
 import variables
 import builtins
 import os
@@ -35,6 +36,7 @@ typed_issue_severity = assign_severities()
 
 # ======================================================================================================================
 # Endpoint
+# TODO: HEALTH service not GET for validate!
 @app.route("/validate", methods=['GET', 'POST'])
 def validate():
     if flask.request.method == 'GET':
@@ -50,11 +52,11 @@ def validate():
     if should_validate:
         try:
             result = validate_with_marshal(processed_data, content_type)
-            json_result['issue'].extend(json.loads(result.text).get('issue', []))
+            json_result['issue'].extend(result.get('issue', []))
         except requests.exceptions.ConnectionError as e:
             json_result['issue'].append(generate_connection_warning(e))
     json_result['issue'].extend(warnings)
-    return json.dumps(json_result, indent=2)
+    return Response(json.dumps(json_result, indent=2), mimetype='application/json')
 
 
 def preprocess_json(data):
@@ -183,30 +185,5 @@ def generate_connection_warning(conn_error):
 
 
 def validate_with_marshal(data, content_type):
-    response = requests.post(url=v_url + '/validate', headers={'Content-Type': content_type}, data=data)
-    return response
-
-
-def upload_validation_profiles():
-    print(f'Uploading profiles to {variables.s_url} ...')
-    for profile in glob.glob(os.path.join('profiles', '*', '*.xml'), recursive=True):
-        data = open(profile).read()
-        json_data = xmltodict.parse(data)
-        url = variables.s_url + 'StructureDefinition/' + f'{json_data["StructureDefinition"]["id"]["@value"]}'
-        response = requests.put(url=url, headers={'Content-Type': 'application/xml'}, data=data)
-        print(f'Send profile {profile}: {response.status_code}')
-    for profile in glob.glob(os.path.join('profiles', '*', '*.json'), recursive=True):
-        data = open(profile).read()
-        json_data = json.loads(data)
-        try:
-            url = variables.s_url + 'StructureDefinition/' + f'{json_data["id"]}'
-        except KeyError:
-            print(profile)
-        response = requests.put(url=url, headers={'Content-Type': 'application/json'}, data=data)
-        print(f'Send profile {profile}: {response.status_code}')
-
-
-if __name__ == "__main__":
-    # Upload validation profiles to server
-    upload_validation_profiles()
-    # app.run()
+    response = requests.post(url=v_url, headers={'Content-Type': content_type}, data=data)
+    return response.json()
