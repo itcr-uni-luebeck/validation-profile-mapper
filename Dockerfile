@@ -1,10 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM python:3.10-alpine
+FROM python:3.10
 
 ENV SERVICE_PORT 8092
 ENV VALIDATOR_URL "http://localhost:8091"
-
-RUN apk add build-base
 
 VOLUME ["/app/maps"]
 
