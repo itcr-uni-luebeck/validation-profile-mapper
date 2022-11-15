@@ -86,7 +86,7 @@ def preprocess_json(data):
                                                                      system=rec_get(instance, 'code', 'coding', 0, 'system'),
                                                                      profile=rec_get(instance, 'meta', 'profile', 0)))
                     else:
-                        entry['full_url'] = validation_mapping[type]
+                        instance['meta']['profile'] = [validation_mapping[type]]
                 else:
                     # Only process instances of relevant types
                     pass
