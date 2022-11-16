@@ -81,15 +81,19 @@ def preprocess_json(data):
                         profile = validation_mapping.get('Observation').get(code)
                         if profile is not None:
                             instance['meta']['profile'] = [profile]
+                            print(f"\tAssigned profile {profile} to instance of {type}")
                         else:
-                            instance['meta']['profile'] = [rec_get(validation_mapping, 'Observation', 'default')]
+                            print(f"\tAssigned no profile to instance of {type}")
                             warnings.append(generate_mapping_warning(idx=idx, code=code,
                                                                      system=rec_get(instance, 'code', 'coding', 0, 'system'),
                                                                      profile=rec_get(instance, 'meta', 'profile', 0)))
                     else:
-                        instance['meta']['profile'] = [validation_mapping[type]]
+                        profile = validation_mapping[type]
+                        instance['meta']['profile'] = [profile]
+                        print(f"\tAssigned profile {profile} to instance of {type}")
                 else:
                     # Only process instances of relevant types
+                    print(f"\tAssigned no profile to instance of {type}")
                     pass
             except ParsingKeyError as pke:
                 warnings.append(generate_preprocessing_warning(pke))
