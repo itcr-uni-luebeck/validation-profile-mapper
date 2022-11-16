@@ -75,25 +75,26 @@ def preprocess_json(data):
             try:
                 instance = rec_get(entry, 'resource') # entry['resource']
                 type = rec_get(instance, 'resourceType') # instance['resourceType']
+                print(f"\tProcessing instance of type {type}: ", end='')
                 if type in resource_types:
                     if type == 'Observation':
                         code = rec_get(instance, 'code', 'coding', 0, 'code') # instance['code']['coding'][0]['code']
                         profile = validation_mapping.get('Observation').get(code)
                         if profile is not None:
                             instance['meta']['profile'] = [profile]
-                            print(f"\tAssigned profile {profile} to instance of {type}")
+                            print(f"Assigned profile {profile}")
                         else:
-                            print(f"\tAssigned no profile to instance of {type}")
+                            print(f"Assigned no profile to instance of {type}")
                             warnings.append(generate_mapping_warning(idx=idx, code=code,
                                                                      system=rec_get(instance, 'code', 'coding', 0, 'system'),
                                                                      profile=rec_get(instance, 'meta', 'profile', 0)))
                     else:
                         profile = validation_mapping[type]
                         instance['meta']['profile'] = [profile]
-                        print(f"\tAssigned profile {profile} to instance of {type}")
+                        print(f"Assigned profile {profile}")
                 else:
                     # Only process instances of relevant types
-                    print(f"\tAssigned no profile to instance of {type}")
+                    print(f"Assigned no profile")
                     pass
             except ParsingKeyError as pke:
                 warnings.append(generate_preprocessing_warning(pke))
