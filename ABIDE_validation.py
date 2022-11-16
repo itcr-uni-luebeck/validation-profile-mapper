@@ -42,6 +42,10 @@ def validate():
     if flask.request.method == 'GET':
         return ""
     data = flask.request.data
+    test = json.load(data)
+    for entry in test['entry']:
+        if entry['resource']['resourceType'] == 'Medication':
+            print('#'*100)
     content_type = flask.request.headers['Content-Type']
     print('Preprocessing data ...')
     # TODO: Check basic data validity
