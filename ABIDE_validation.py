@@ -82,6 +82,7 @@ def preprocess_json(data):
                         if profile is not None:
                             instance['meta']['profile'] = [profile]
                         else:
+                            instance['meta']['profile'] = [rec_get(validation_mapping, 'Observation', 'default')]
                             warnings.append(generate_mapping_warning(idx=idx, code=code,
                                                                      system=rec_get(instance, 'code', 'coding', 0, 'system'),
                                                                      profile=rec_get(instance, 'meta', 'profile', 0)))
