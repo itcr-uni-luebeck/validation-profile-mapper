@@ -42,7 +42,7 @@ def validate():
     if flask.request.method == 'GET':
         return ""
     data = flask.request.data
-    test = json.load(data)
+    test = json.loads(data)
     for entry in test['entry']:
         if entry['resource']['resourceType'] == 'Medication':
             print('#'*100)
