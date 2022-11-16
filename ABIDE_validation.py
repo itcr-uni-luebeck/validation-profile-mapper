@@ -199,4 +199,5 @@ def validate_with_marshal(data, content_type):
     if response.status_code != 200:
         print(f"Status code: {response.status_code}")
         print(f"Response: {response.text}")
+        print(f"Data:\n{data}")
     return response.json()
