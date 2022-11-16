@@ -158,7 +158,7 @@ preprocessing = {'application/json': preprocess_json,
 def generate_mapping_warning(idx, code, system, profile):
     return {'severity': typed_issue_severity['mapping_issue'],
             'code': 'not-supported',
-            'diagnostics': f'Observation.code.coding:loinc: no matching profile for code {code} with system {system} and profile {profile}',
+            'diagnostics': f'VALIDATION_PROFILE_MAPPING: Observation.code.coding:loinc: no matching profile for code {code} with system {system} and profile {profile}',
             'location': [f'Bundle.entry[{idx}].resource.ofType(Observation).code.coding[0]']}
 
 
@@ -166,27 +166,27 @@ def generate_parsing_warning(msg):
     # FHIR Marshal doesn't seem to return error location in case of a parsing error
     return {'severity': typed_issue_severity['parsing_issue'],
             'code': 'processing',
-            'diagnostics': f'Data could not be parsed: {msg}'}
+            'diagnostics': f'VALIDATION_PROFILE_MAPPING: Data could not be parsed: {msg}'}
 
 
 def generate_preprocessing_warning(parsing_key_error):
     return {'severity': typed_issue_severity['parsing_issue'],
             'code': 'processing',
-            'diagnostics': f'Data could not be parsed: {parsing_key_error.msg}',
+            'diagnostics': f'VALIDATION_PROFILE_MAPPING: Data could not be parsed: {parsing_key_error.msg}',
             'location': [parsing_key_error.str_loc]}
 
 
 def generate_empty_bundle_warning():
     return {'severity': typed_issue_severity['empty_bundle_issue'],
             'code': 'processing',
-            'diagnostics': f'No entries in bundle. Thus no instances were validated.',
+            'diagnostics': f'VALIDATION_PROFILE_MAPPING: No entries in bundle. Thus no instances were validated.',
             'location': [f'Bundle.entry']}
 
 
 def generate_connection_warning(conn_error):
     return {'severity': 'error',
             'code': 'timeout',
-            'diagnostics': str(conn_error)}
+            'diagnostics': f"VALIDATION_PROFILE_MAPPING: {str(conn_error)}"}
 
 
 def validate_with_marshal(data, content_type):
