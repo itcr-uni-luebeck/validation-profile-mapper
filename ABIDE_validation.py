@@ -186,4 +186,7 @@ def generate_connection_warning(conn_error):
 
 def validate_with_marshal(data, content_type):
     response = requests.post(url=v_url, headers={'Content-Type': content_type}, data=data)
+    if response.status_code != 200:
+        print(f"Status code: {response.status_code}")
+        print(f"Response: {response.text}")
     return response.json()
