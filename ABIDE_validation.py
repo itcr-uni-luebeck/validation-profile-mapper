@@ -42,10 +42,6 @@ def validate():
     if flask.request.method == 'GET':
         return ""
     data = flask.request.data
-    test = json.loads(data)
-    for entry in test['entry']:
-        if entry['resource']['resourceType'] == 'Medication':
-            print('#'*100)
     content_type = flask.request.headers['Content-Type']
     print('Preprocessing data ...')
     # TODO: Check basic data validity
@@ -66,7 +62,6 @@ def validate():
 def preprocess_json(data):
     warnings = list()
     idx = 0
-    # status indicates whether validation should occur (0 fine, otherwise not)
     should_validate = True
     try:
         data = json.loads(data)
@@ -82,7 +77,11 @@ def preprocess_json(data):
                 print(f"\tProcessing instance of type {type}: ", end='')
                 if type in resource_types:
                     if type == 'Observation':
-                        code = rec_get(instance, 'code', 'coding', 0, 'code') # instance['code']['coding'][0]['code']
+                        code = None
+                        for coding in rec_get(instance, 'code', 'coding'):
+                            if coding.get('system') == 'http://loinc.org':
+                                code = coding.get('code')
+                                break
                         profile = validation_mapping.get('Observation').get(code)
                         if profile is not None:
                             instance['meta']['profile'] = [profile]
@@ -90,7 +89,7 @@ def preprocess_json(data):
                         else:
                             print(f"Assigned no profile to instance of {type}")
                             warnings.append(generate_mapping_warning(idx=idx, code=code,
-                                                                     system=rec_get(instance, 'code', 'coding', 0, 'system'),
+                                                                     system='http://loinc.org',
                                                                      profile=rec_get(instance, 'meta', 'profile', 0)))
                     else:
                         profile = validation_mapping[type]
@@ -133,7 +132,7 @@ def preprocess_xml(data):
                         instance['meta'] = [{'profile': {'@value': profile}}]
                     else:
                         warnings.append(generate_mapping_warning(idx=idx, code=code,
-                                                                 system=rec_get(instance, 'code', 'coding', 0, 'system', '@value'),
+                                                                 system='http://loinc.org',
                                                                  profile=rec_get(instance, 'meta', 'profile', 0, '@value')))
                 elif 'Medication' in entry:
                     entry['full_url']['@value'] = validation_mapping['Medication']
