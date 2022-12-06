@@ -2,7 +2,7 @@
 FROM python:3.10
 
 ENV SERVICE_PORT 8092
-ENV VALIDATOR_URL "http://localhost:8091"
+ENV VALIDATOR_URL "http://localhost:8091/validate"
 
 VOLUME ["/app/maps"]
 

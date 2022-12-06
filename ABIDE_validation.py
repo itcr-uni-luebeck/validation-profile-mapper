@@ -53,8 +53,10 @@ def validate():
         try:
             result = validate_with_marshal(processed_data, content_type)
             json_result['issue'].extend(result.get('issue', []))
-        except requests.exceptions.ConnectionError as e:
-            json_result['issue'].append(generate_connection_warning(e))
+        except requests.exceptions.ConnectionError as error:
+            json_result['issue'].append(generate_connection_warning(error))
+        except requests.exceptions.HTTPError as error:
+            json_result['issue'].append(generate_http_warning(error))
     json_result['issue'].extend(warnings)
     return Response(json.dumps(json_result, indent=2), mimetype='application/json')
 
@@ -193,10 +195,17 @@ def generate_connection_warning(conn_error):
             'diagnostics': f"VALIDATION_PROFILE_MAPPING: {str(conn_error)}"}
 
 
+def generate_http_warning(http_error):
+    return {'severity': 'error',
+            'code': 'processing',
+            'diagnostics': f"VALIDATION_PROFILE_MAPPING: {str(http_error)}"}
+
+
 def validate_with_marshal(data, content_type):
     response = requests.post(url=v_url, headers={'Content-Type': content_type}, data=data)
     if response.status_code != 200:
         print(f"Status code: {response.status_code}")
         print(f"Response: {response.text}")
         print(f"Data:\n{data}")
+        raise requests.exceptions.HTTPError(f"Request failed with status code {response.status_code}:\n{response.text}")
     return response.json()
