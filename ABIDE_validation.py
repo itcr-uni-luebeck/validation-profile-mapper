@@ -73,36 +73,8 @@ def preprocess_json(data):
             should_validate = False
             return json.dumps(data, indent=4), warnings, should_validate
         for entry in data['entry']:
-            try:
-                instance = rec_get(entry, 'resource') # entry['resource']
-                type = rec_get(instance, 'resourceType') # instance['resourceType']
-                print(f"\tProcessing instance of type {type}: ", end='')
-                if type in resource_types:
-                    if type == 'Observation':
-                        code = None
-                        for coding in rec_get(instance, 'code', 'coding'):
-                            if coding.get('system') == 'http://loinc.org':
-                                code = coding.get('code')
-                                break
-                        profile = validation_mapping.get('Observation').get(code)
-                        if profile is not None:
-                            instance['meta']['profile'] = [profile]
-                            print(f"Assigned profile {profile}")
-                        else:
-                            print(f"Assigned no profile to instance of {type}")
-                            warnings.append(generate_mapping_warning(idx=idx, code=code,
-                                                                     system='http://loinc.org',
-                                                                     profile=rec_get(instance, 'meta', 'profile', 0)))
-                    else:
-                        profile = validation_mapping[type]
-                        instance['meta']['profile'] = [profile]
-                        print(f"Assigned profile {profile}")
-                else:
-                    # Only process instances of relevant types
-                    print(f"Assigned no profile")
-                    pass
-            except ParsingKeyError as pke:
-                warnings.append(generate_preprocessing_warning(pke))
+            profile_assignment_warnings = assign_profile_to_structure_definition_json(entry, idx)
+            warnings.extend(profile_assignment_warnings)
             idx += 1
     except JSONDecodeError as e:
         warnings.append(generate_parsing_warning(e.msg))
@@ -111,6 +83,53 @@ def preprocess_json(data):
         warnings.append(generate_preprocessing_warning(pke))
         should_validate = False
     return json.dumps(data, indent=4), warnings, should_validate
+
+
+def assign_profile_to_structure_definition_json(entry, idx):
+    warnings = []
+    try:
+        instance = rec_get(entry, 'resource')
+        resource_type = rec_get(instance, 'resourceType')
+        print(f"\tProcessing instance of type {resource_type}: ", end='')
+        if resource_type in resource_types:
+            if resource_type == 'Observation':
+                observation_warnings = assign_profile_to_observation_instance_json(instance, idx)
+                warnings.extend(observation_warnings)
+            else:
+                assign_profile_to_instance_json(instance, resource_type)
+        else:
+            # Only process instances of relevant types
+            print(f"Assigned no profile")
+            pass
+    except ParsingKeyError as pke:
+        warnings.append(generate_preprocessing_warning(pke))
+    return warnings
+
+
+def assign_profile_to_instance_json(instance, resource_type):
+    profile = validation_mapping[resource_type]
+    instance['meta']['profile'] = [profile]
+    print(f"Assigned profile {profile}")
+
+
+def assign_profile_to_observation_instance_json(observation_instance, idx):
+    observation_warnings = []
+    code = None
+    for coding in rec_get(observation_instance, 'code', 'coding'):
+        if coding.get('system') == 'http://loinc.org':
+            code = coding.get('code')
+            break
+    profile = validation_mapping.get('Observation').get(code)
+    if profile is not None:
+        observation_instance['meta']['profile'] = [profile]
+        print(f"Assigned profile {profile}")
+    else:
+        print(f"Assigned no profile to instance of Observation")
+        observation_warnings.append(generate_mapping_warning(idx=idx, code=code,
+                                                             system='http://loinc.org',
+                                                             profile=rec_get(observation_instance, 'meta', 'profile', 0)
+                                                             ))
+    return observation_warnings
 
 
 def preprocess_xml(data):
@@ -127,15 +146,16 @@ def preprocess_xml(data):
                 if 'Condition' in entry:
                     entry['fullUrl']['@value'] = validation_mapping['Condition']
                 elif 'Observation' in entry:
-                    instance = rec_get(entry, 'Observation') # entry['Observation']
-                    code = rec_get(instance, 'code', 'coding', 0, 'code', '@value') # instance['code']['coding'][0]['code']['@value']
+                    instance = rec_get(entry, 'Observation')
+                    code = rec_get(instance, 'code', 'coding', 0, 'code', '@value')
                     profile = validation_mapping['Observation'][code]
                     if profile is not None:
                         instance['meta'] = [{'profile': {'@value': profile}}]
                     else:
                         warnings.append(generate_mapping_warning(idx=idx, code=code,
                                                                  system='http://loinc.org',
-                                                                 profile=rec_get(instance, 'meta', 'profile', 0, '@value')))
+                                                                 profile=rec_get(instance, 'meta', 'profile', 0,
+                                                                                 '@value')))
                 elif 'Medication' in entry:
                     entry['full_url']['@value'] = validation_mapping['Medication']
                 elif 'MedicationAdministration' in entry:
@@ -164,7 +184,8 @@ preprocessing = {'application/json': preprocess_json,
 def generate_mapping_warning(idx, code, system, profile):
     return {'severity': typed_issue_severity['mapping_issue'],
             'code': 'not-supported',
-            'diagnostics': f'VALIDATION_PROFILE_MAPPING: Observation.code.coding:loinc: no matching profile for code {code} with system {system} and profile {profile}',
+            'diagnostics': f'VALIDATION_PROFILE_MAPPING: Observation.code.coding:loinc: no matching profile for code '
+                           f'{code} with system {system} and profile {profile}',
             'location': [f'Bundle.entry[{idx}].resource.ofType(Observation).code.coding[0]']}
 
 

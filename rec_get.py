@@ -13,19 +13,19 @@ def rec_get(data, *args):
             return rec_get(data[args[0]], *args[1:])
     except (KeyError, IndexError, TypeError) as e:
         raise ParsingKeyError(key=args[0], reason_err=e)
-    except ParsingKeyError as pke:
-        raise ParsingKeyError(key=args[0], pke=pke)
+    except ParsingKeyError as parsing_key_error:
+        raise ParsingKeyError(key=args[0], parsing_key_error=parsing_key_error)
 
 
 class ParsingKeyError(Exception):
 
-    def __init__(self, key, reason_err=None, pke=None):
+    def __init__(self, key, reason_err=None, parsing_key_error=None):
         self.loc = [key]
-        if pke is None:
+        if parsing_key_error is None:
             self.reason = f'{type(reason_err).__name__}: {str(reason_err)}'
         else:
-            self.loc.extend(pke.loc)
-            self.reason = pke.reason
+            self.loc.extend(parsing_key_error.loc)
+            self.reason = parsing_key_error.reason
         self.str_loc = self.generate_str_location(self.loc)
         self.msg = f"Couldn't access using key or index @ {self.str_loc}. Reason: {self.reason}"
 
