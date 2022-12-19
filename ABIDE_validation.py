@@ -1,8 +1,5 @@
-import xml
-
 import flask
 import json
-import xmltodict
 import requests
 
 from flask import Response
@@ -132,53 +129,7 @@ def assign_profile_to_observation_instance_json(observation_instance, idx):
     return observation_warnings
 
 
-def preprocess_xml(data):
-    warnings = list()
-    idx = 0
-    try:
-        data = xmltodict.parse(data)
-        entries = data.get('Bundle').get('entry')
-        if entries is None or builtins.type(entries) is not list or len(entries) == 0:
-            warnings.append(generate_empty_bundle_warning())
-            return xmltodict.unparse(data), warnings
-        for entry in entries:
-            try:
-                if 'Condition' in entry:
-                    entry['fullUrl']['@value'] = validation_mapping['Condition']
-                elif 'Observation' in entry:
-                    instance = rec_get(entry, 'Observation')
-                    code = rec_get(instance, 'code', 'coding', 0, 'code', '@value')
-                    profile = validation_mapping['Observation'][code]
-                    if profile is not None:
-                        instance['meta'] = [{'profile': {'@value': profile}}]
-                    else:
-                        warnings.append(generate_mapping_warning(idx=idx, code=code,
-                                                                 system='http://loinc.org',
-                                                                 profile=rec_get(instance, 'meta', 'profile', 0,
-                                                                                 '@value')))
-                elif 'Medication' in entry:
-                    entry['full_url']['@value'] = validation_mapping['Medication']
-                elif 'MedicationAdministration' in entry:
-                    entry['full_url']['@value'] = validation_mapping['MedicationAdministration']
-                elif 'MedicationStatement' in entry:
-                    entry['full_url']['@value'] = validation_mapping['MedicationStatement']
-                elif 'Procedure' in entry:
-                    entry['full_url']['@value'] = validation_mapping['Procedure']
-                else:
-                    # Only process instances of relevant types
-                    pass
-            except ParsingKeyError as pke:
-                warnings.append(generate_preprocessing_warning(pke))
-            idx += 1
-    except xml.parsers.expat.ExpatError as e:
-        warnings.append(generate_parsing_warning(str(e)))
-    except ParsingKeyError as pke:
-        warnings.append(generate_preprocessing_warning(pke))
-    return xmltodict.unparse(data), warnings
-
-
-preprocessing = {'application/json': preprocess_json,
-                 'application/xml': preprocess_xml}
+preprocessing = {'application/json': preprocess_json}
 
 
 def generate_mapping_warning(idx, code, system, profile):
